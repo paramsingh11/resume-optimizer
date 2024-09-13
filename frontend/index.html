@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Analyzer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f7f7f7;
+            text-align: center;
+            color: #333;
+        }
+        textarea {
+            width: 80%;
+            margin: 10px auto;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .score-card {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 20px 0;
+        }
+        .score-card div {
+            background: #4CAF50;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            width: 200px;
+            text-align: center;
+        }
+        .score-card div span {
+            display: block;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .retro {
+            font-family: 'Courier New', Courier, monospace;
+            color: #fff;
+            background: linear-gradient(135deg, #f4c20d, #f39c12);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <h1>Resume Analyzer</h1>
+    <textarea id="resume" rows="10" placeholder="Enter resume text here..."></textarea><br>
+    <textarea id="job_description" rows="10" placeholder="Enter job description here..."></textarea><br>
+    <button onclick="analyze()">Analyze</button>
+
+    <div id="results">
+        <div class="score-card">
+            <div>
+                <span id="atsScore">0%</span>
+                <p>ATS Score</p>
+            </div>
+            <div>
+                <span id="matchScore">0%</span>
+                <p>Match Score</p>
+            </div>
+        </div>
+        <div class="retro">
+            <p id="feedback">Feedback: undefined</p>
+        </div>
+    </div>
+
+    <script>
+        async function analyze() {
+            const resumeText = document.getElementById('resume').value;
+            const jobDescription = document.getElementById('job_description').value;
+
+            console.log("Sending data to server...");
+            console.log({ resume: resumeText, job_description: jobDescription });
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ resume: resumeText, job_description: jobDescription })
+                });
+
+                if (!response.ok) {
+                    console.error("Error:", response.statusText);
+                    document.getElementById('feedback').textContent = 'Error fetching data from server.';
+                    return;
+                }
+
+                const result = await response.json();
+
+                console.log("Received result from server:", result);
+
+                // Update scorecard
+                const atsScore = result.ats_score || 0;
+                const matchScore = result.match_score || 0;
+                const feedback = result.match_feedback || 'undefined';
+
+                document.getElementById('atsScore').textContent = `${atsScore.toFixed(2)}%`;
+                document.getElementById('matchScore').textContent = `${matchScore.toFixed(2)}%`;
+                document.getElementById('feedback').textContent = `Feedback: ${feedback}`;
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+                document.getElementById('feedback').textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
